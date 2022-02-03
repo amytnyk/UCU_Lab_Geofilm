@@ -3,6 +3,7 @@ Module for displaying the nearest 10 filming locations on the interactive map
 """
 import json
 import os.path
+import sys
 from math import sin, cos, pi, sqrt, atan2
 from typing import List, Tuple, Optional, Dict
 from geopy.geocoders import Nominatim
@@ -62,6 +63,15 @@ def save_geocache(cache: Dict[str, Tuple[float, float]]):
         file.write(json.dumps(cache))
 
 
+def create_progress(progress_name: str, total: int) -> Tuple[str, int, int]:
+    return progress_name, 0, total
+
+
+def display_progress(progress: Tuple[str, int, int]):
+    sys.stdout.write(f"\r{progress[0]}: {progress[1] / progress[2] * 100:.2f}% ({progress[1]} out of {progress[2]})")
+    sys.stdout.flush()
+
+
 def get_films_with_coordinates(dataset: List[Tuple[str, str]]) ->\
         List[Tuple[str, Tuple[float, float]]]:
     """
@@ -72,12 +82,14 @@ def get_films_with_coordinates(dataset: List[Tuple[str, str]]) ->\
 
     filming_locations = []
     cache = load_geocache()
+    progress = create_progress("Fetching locations", len(dataset))
     for entry in dataset:
         if entry[1] not in cache:
             cache[entry[1]] = get_coordinates(entry[1], geocode)
         if (coordinates := cache[entry[1]]) is not None:
-            print(coordinates)
             filming_locations.append((entry[0], coordinates))
+        progress = (progress[0], progress[1] + 1, progress[2])
+        display_progress(progress)
 
     save_geocache(cache)
     return filming_locations
