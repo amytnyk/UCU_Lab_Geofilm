@@ -1,6 +1,6 @@
 venv
 .idea
 *.bak
-*.list
+locations_full.list
 *.html
 geocache
